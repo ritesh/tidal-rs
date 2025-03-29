@@ -1,0 +1,7 @@
+
+From: https://github.com/emfcamp/TiDAL-Firmware/blob/main/modules/tidal.py
+
+//{'BTN_A': 2, 'BTN_B': 1, 'BTN_FRONT': 6, 'JUP': 15, 'JDOWN': 16, 'JLEFT': 8, 'JRIGHT': 7, 'JCEN': 9, 'G0': 18, 'G1': 17, 'G2': 4, 'G3': 5,
+// 'LED_DATA': 46, 'LED_PWREN': 3, 'LCD_PWR': 39, 'LCD_BLEN': 0, 'SCL_S': 41, 'SDA_S': 42, 'SCL_P': 43, 'SDA_P': 44, 
+//'LCD_CS': 10, 'LCD_CLK': 12, 'LCD_DIN': 11, 'LCD_RESET': 14, 'LCD_DC': 13, 'UVLO_TRIG': 45, 'ACCEL_INT': 40, 'CHARGE_DET': 21}
+//
