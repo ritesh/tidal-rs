@@ -23,8 +23,10 @@ use embedded_graphics::prelude::*;
 use embedded_graphics::Drawable;
 use mipidsi::interface::SpiInterface;
 use mipidsi::models::ST7789;
+use mipidsi::options::ColorInversion;
 use mipidsi::Builder;
 use panic_rtt_target as _;
+
 
 extern crate alloc;
 
@@ -75,8 +77,22 @@ async fn main(spawner: Spawner) {
     //'LCD_CS': 10, 'LCD_CLK': 12, 'LCD_DIN': 11, 'LCD_RESET': 14, 'LCD_DC': 13,
     // 'UVLO_TRIG': 45, 'ACCEL_INT': 40, 'CHARGE_DET': 21}
     //
+
+     //'LCD_CS': 10, 'LCD_CLK': 12, 'LCD_DIN': 11, 'LCD_RESET': 14, 'LCD_DC': 13,
     let mut cs = Output::new(peripherals.GPIO10, Level::High, OutputConfig::default()); //chip select
     let sclk = peripherals.GPIO12; //clock
+    let mut dc = peripherals.GPIO13; 
+    let mosi = peripherals.GPIO11;
+    let mut backlight = Output::new(peripherals.GPIO0, Level::High, OutputConfig::default()); //Low is on, High is off?
+    let _lcd_pwr_en = Output::new(peripherals.GPIO3, Level::High, OutputConfig::default());
+    let _lcd_pwr_always = Output::new(peripherals.GPIO39, Level::Low, OutputConfig::default());
+
+    // This affects pins G0, G1, G2, G3 (GPIO18,GPIO17,GPIO4,GPIO5 respectively).
+    let _g18 = Output::new(peripherals.GPIO18, Level::High, OutputConfig::default().with_pull(esp_hal::gpio::Pull::Up));
+    let _g17 = Output::new(peripherals.GPIO17, Level::High, OutputConfig::default().with_pull(esp_hal::gpio::Pull::Up));
+    let _g04 = Output::new(peripherals.GPIO4, Level::High, OutputConfig::default().with_pull(esp_hal::gpio::Pull::Up));
+    let _g5 = Output::new(peripherals.GPIO5, Level::High, OutputConfig::default().with_pull(esp_hal::gpio::Pull::Up));
+
 
 
     //From: https://github.com/emfcamp/TiDAL-Firmware/blob/main/modules/tidal.py
@@ -84,43 +100,40 @@ async fn main(spawner: Spawner) {
 // _LCD_DC = Pin(_hw["LCD_DC"], Pin.OUT)
 // display = st7789.ST7789(_LCD_SPI, 135, 240, cs=_LCD_CS, reset=_LCD_RESET, dc=_LCD_DC, rotation=2)
 
-    let mut dc = peripherals.GPIO13; // Assuming this is LCD_DC
-    let mosi = peripherals.GPIO11;
-    let rst = Output::new(peripherals.GPIO14, Level::High, OutputConfig::default());
-    let mut backlight = Output::new(peripherals.GPIO0, Level::High, OutputConfig::default()); //Low is on, High is off?
-  
+    //'LCD_CS': 10, 'LCD_CLK': 12, 'LCD_DIN': 11, 'LCD_RESET': 14, 'LCD_DC': 13,
+
+
+    //'LCD_CS': 10, 'LCD_CLK': 12, 'LCD_DIN': 11, 'LCD_RESET': 14, 'LCD_DC': 13,
+    // display = st7789.ST7789(_LCD_SPI, 135, 240, cs=_LCD_CS, reset=_LCD_RESET, dc=_LCD_DC, rotation=2)
 
     let spi = Spi::new(
         peripherals.SPI2,
         Config::default()
-            .with_frequency(Rate::from_mhz(40))
+            .with_frequency(Rate::from_mhz(60))
             .with_mode(esp_hal::spi::Mode::_0),
     )
     .unwrap()
     .with_mosi(mosi)
-    .with_sck(sclk).into_async();
+    .with_sck(sclk);
 
     let mut buffer = [0_u8; 512];
 
+    //'LCD_CS': 10, 'LCD_CLK': 12, 'LCD_DIN': 11, 'LCD_RESET': 14, 'LCD_DC': 13,
     let dc_out = Output::new(&mut dc, Level::High, OutputConfig::default());
-    //let rst_out = Output::new(rst, Level::High, OutputConfig::default());
-
-
     let dev = ExclusiveDevice::new_no_delay(spi, &mut cs).unwrap();
     let di = SpiInterface::new(dev, dc_out, &mut buffer);
 
+    let rst = Output::new(peripherals.GPIO14, Level::High, OutputConfig::default());
     let mut delay = Delay::new();
     let mut display = Builder::new(ST7789, di)
         .display_size(W, H)
-        //.invert_colors(ColorInversion::Inverted)
+        .invert_colors(ColorInversion::Inverted)
         .reset_pin(rst)
         .init(&mut delay)
         .unwrap();
 
-    display.clear(Rgb565::BLACK).unwrap();
 
-   
-
+    display.clear(Rgb565::GREEN).unwrap();
     backlight.toggle();
   
     loop {
